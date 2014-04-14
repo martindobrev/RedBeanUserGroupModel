@@ -1,6 +1,7 @@
 <?php
 
 require_once 'lib/rb.php';
+require_once 'predicates/user_predicates.php';
 
 /**
  * class Model_Group
@@ -15,6 +16,22 @@ require_once 'lib/rb.php';
  * @created 14.04.2014 14:12:52
  */
 class Model_Group extends \RedBean_SimpleModel {
+    
+    /**
+     * Variable to store the user predicate for filtering users
+     * 
+     * @var UserPredicateInterface
+     */
+    private $_userPredicate = null;
+    
+    /**
+     * Sets the user filtering predicate
+     * 
+     * @param UserPredicateInterface $userPredicate
+     */
+    public function setUserPredicate(UserPredicateInterface $userPredicate) {
+        $this->_userPredicate = $userPredicate;
+    }
     
     /**
      * Check if we are not creating an infinite loop 
@@ -136,10 +153,24 @@ class Model_Group extends \RedBean_SimpleModel {
     /**
      * Returns all users of the current group
      * 
+     * If the filtering predicate is set, filters the 
+     * users by the predicate
+     * 
      * @return array of RedBean_OODBBean objects
      */
     public function getOwnUsers() {
-        return $this->bean->ownUser;
+        if (null !== $this->_userPredicate) {
+            $users = $this->bean->ownUser;
+            $filteredUsers = array();
+            foreach ($users as $user) {
+                if (true === $this->_userPredicate->evaluate($user->box())) {
+                    $filteredUsers[$user->id] = $user;
+                }
+            }
+            return $filteredUsers;
+        } else {
+            return $this->bean->ownUser;
+        }
     }
     
     /**
@@ -150,9 +181,12 @@ class Model_Group extends \RedBean_SimpleModel {
     public function getAllUsers() {
         $users = $this->getOwnUsers();
         foreach ($this->getAllChildren() as $childGroup) {
-            $users = array_merge($users, $childGroup->getOwnUsers());
+            $childGroupModel = $childGroup->box();
+            if (null !== $this->_userPredicate) {
+                $childGroupModel->setUserPredicate($this->_userPredicate);
+            }
+            $users = array_merge($users, $childGroupModel->getOwnUsers());
         }
         return $users;
     }
-    
 }

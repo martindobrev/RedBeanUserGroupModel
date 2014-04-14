@@ -1,6 +1,6 @@
 <?php
 
-require_once 'lib.rb.php';
+require_once 'lib/rb.php';
 
 /**
  * class Model_User

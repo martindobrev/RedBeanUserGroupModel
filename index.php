@@ -30,10 +30,24 @@ include_once 'init_db.php';
 //R::store($germany); // SHALL RAISE AN EXCEPTION
 
 $germany = R::load('group', 2);
-$germanyGroupStructure = $germany->box()->extractGroupIndentation();
+
+$predicate = new UserNameRegexPredicate('/^[a-zA-Z_]*2$/');
+
+$germanyModel = $germany->box();
+$germanyModel->setUserPredicate($predicate);
+$germanyUsersThatEndWith2 =$germanyModel->getAllUsers();
 
 
+echo '<h2> Germany users ending by "2":</h2>';
 
+foreach ($germanyUsersThatEndWith2 as $user) {
+    echo '<pre>';
+    print_r($user->export());
+    echo '</pre>';
+}
+
+
+/* GERMANY USERS TEST
 $germanyUsers = $germany->box()->getAllUsers();
 
 echo '<pre>';
@@ -42,6 +56,7 @@ foreach ($germanyUsers as $user) {
 }
 echo '</pre>';
 die();
+ */
 
 /* INFINITE LOOP EXCEPTION
 $flatGermanyStruct = array();
