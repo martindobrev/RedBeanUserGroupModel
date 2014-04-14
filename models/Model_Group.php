@@ -133,4 +133,26 @@ class Model_Group extends \RedBean_SimpleModel {
         }
     }
     
+    /**
+     * Returns all users of the current group
+     * 
+     * @return array of RedBean_OODBBean objects
+     */
+    public function getOwnUsers() {
+        return $this->bean->ownUser;
+    }
+    
+    /**
+     * Return all users of the current group and all users of all subgroups
+     * 
+     * @return array of RedBean_OODBBean objects
+     */
+    public function getAllUsers() {
+        $users = $this->getOwnUsers();
+        foreach ($this->getAllChildren() as $childGroup) {
+            $users = array_merge($users, $childGroup->getOwnUsers());
+        }
+        return $users;
+    }
+    
 }

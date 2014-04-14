@@ -34,6 +34,26 @@ function createGroup($name, RedBean_OODBBean $parentGroup = null) {
 }
 
 /**
+ * Creates a new user
+ * 
+ * Users will also have only a name attribute,
+ * Feel free to add additional attributes
+ * 
+ * @param type $name
+ * @param type $group
+ * @return type
+ */
+function createUser($name, $group = null) {
+    $bean = R::dispense('user');
+    $bean->setAttr('name', $name);
+    if (null !== $group) {
+        $bean->setAttr('group', $group);
+    }
+    R::store($bean);
+    return $bean;
+}
+
+/**
  * Creates a simple dummy company structure for testing purposes
  * 
  * The created structure is:
@@ -57,5 +77,21 @@ function initGroups() {
     createGroup('Office Edinburgh', $uk);
 }
 
+/**
+ * Creates dummy users
+ * 
+ * Three users are added to each group. They are named after the group
+ */
+function initUsers() {
+    $groups = R::findAll('group');
+    
+    foreach ($groups as $group) {
+        for ($i = 0; $i < 3; $i++) {
+            createUser(str_replace(' ', '_', $group->name) . '_User_' . $i, $group);
+        }
+    }
+}
+
 R::nuke(); // RESET DATABASE
 initGroups(); // Create dummy groups
+initUsers(); // Create dummy users

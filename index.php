@@ -34,14 +34,23 @@ $germanyGroupStructure = $germany->box()->extractGroupIndentation();
 
 
 
+$germanyUsers = $germany->box()->getAllUsers();
+
+echo '<pre>';
+foreach ($germanyUsers as $user) {
+    print_r($user->export());
+}
+echo '</pre>';
+die();
+
+/* INFINITE LOOP EXCEPTION
 $flatGermanyStruct = array();
 $germany->box()->extractFlatGroupIndentation(0, $flatGermanyStruct);
 echo '<pre>';
 print_r($flatGermanyStruct);
 echo '</pre>';
 die();
-
-
+*/
 
 
 /*  ROOT CHILDREN DISPLAY
