@@ -18,19 +18,34 @@ require_once 'predicates/user_predicates.php';
 class Model_Group extends \RedBean_SimpleModel {
     
     /**
-     * Variable to store the user predicate for filtering users
+     * Variable to store the user predicates for filtering users
      * 
      * @var UserPredicateInterface
      */
-    private $_userPredicate = null;
+    private $_userPredicates = array();
     
     /**
-     * Sets the user filtering predicate
+     * Adds a new user predicate for user filtering
      * 
      * @param UserPredicateInterface $userPredicate
      */
-    public function setUserPredicate(UserPredicateInterface $userPredicate) {
-        $this->_userPredicate = $userPredicate;
+    public function addUserPredicate(UserPredicateInterface $userPredicate) {
+        $this->_userPredicates[] = $userPredicate;
+    }
+    
+    /**
+     * Resets user predicates (empty array)
+     */
+    public function resetUserPredicates() {
+        $this->_userPredicates = array();
+    }
+    
+    /**
+     * Sets user predicates 
+     * @param array $userPredicates
+     */
+    public function setUserPredicates($userPredicates) {
+        $this->_userPredicates = $userPredicates;
     }
     
     /**
@@ -159,14 +174,20 @@ class Model_Group extends \RedBean_SimpleModel {
      * @return array of RedBean_OODBBean objects
      */
     public function getOwnUsers() {
-        if (null !== $this->_userPredicate) {
+        if (0 < count($this->_userPredicates)) {
             $users = $this->bean->ownUser;
             $filteredUsers = array();
-            foreach ($users as $user) {
-                if (true === $this->_userPredicate->evaluate($user->box())) {
-                    $filteredUsers[$user->id] = $user;
+            
+            foreach ($this->_userPredicates as $predicate) {
+                $filteredUsers = array();
+                foreach ($users as $user) {
+                    if (true === $predicate->evaluate($user->box())) {                        
+                        $filteredUsers[$user->id] = $user;
+                    }
                 }
+                $users = $filteredUsers;
             }
+            
             return $filteredUsers;
         } else {
             return $this->bean->ownUser;
@@ -182,8 +203,8 @@ class Model_Group extends \RedBean_SimpleModel {
         $users = $this->getOwnUsers();
         foreach ($this->getAllChildren() as $childGroup) {
             $childGroupModel = $childGroup->box();
-            if (null !== $this->_userPredicate) {
-                $childGroupModel->setUserPredicate($this->_userPredicate);
+            if (0 < count($this->_userPredicates)) {
+                $childGroupModel->setUserPredicates($this->_userPredicates);
             }
             $users = array_merge($users, $childGroupModel->getOwnUsers());
         }

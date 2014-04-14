@@ -29,6 +29,29 @@ include_once 'init_db.php';
 //$germany->parent = $berlin;
 //R::store($germany); // SHALL RAISE AN EXCEPTION
 
+
+$user = R::load('user', 5);
+$userBox = $user->box();
+
+$predicate = new UserNameRegexPredicate('/^[a-zA-Z_]*2$/');
+$predicate2 = new UserNameRegexPredicate('/Dresden/');
+
+$userBox->addUserPredicate($predicate);
+$userBox->addUserPredicate($predicate2);
+$visibleUsers = $userBox->getVisibleUsers();
+
+echo '<h2>Visible users for user "' . $user->name . '": </h2>';
+echo '<pre>';
+foreach ($visibleUsers as $u) {
+    print_r($u->export());
+}
+
+echo '</pre>';
+die();
+
+
+
+/*   FILTERED USERS TEST 
 $germany = R::load('group', 2);
 
 $predicate = new UserNameRegexPredicate('/^[a-zA-Z_]*2$/');
@@ -38,6 +61,7 @@ $germanyModel->setUserPredicate($predicate);
 $germanyUsersThatEndWith2 =$germanyModel->getAllUsers();
 
 
+
 echo '<h2> Germany users ending by "2":</h2>';
 
 foreach ($germanyUsersThatEndWith2 as $user) {
@@ -45,7 +69,7 @@ foreach ($germanyUsersThatEndWith2 as $user) {
     print_r($user->export());
     echo '</pre>';
 }
-
+*/
 
 /* GERMANY USERS TEST
 $germanyUsers = $germany->box()->getAllUsers();
