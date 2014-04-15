@@ -15,6 +15,38 @@ require_once 'lib/rb.php';
  */
 
 /**
+ * Creates a new permission
+ * 
+ * @param string $name
+ * @return RedBean_OODBBean permission bean
+ */
+function createPermission($name) {
+    echo '<p>Creating permission ' . $name . '</p>';
+    $bean = R::dispense('permission');
+    $bean->setAttr('name', $name);
+    R::store($bean);
+    return $bean;
+}
+
+/**
+ * Creates a new role
+ * 
+ * @param string $name
+ * @param array of RedBean_OODBBean objects $permissions
+ * @return RedBean_OODBBean role bean
+ */
+function createRole($name, $permissions) {
+    $bean = R::dispense('role');
+    $bean->setAttr('name', $name);
+    if (0 < count($permissions)) {
+        $bean->sharedPermission = $permissions;
+    } 
+    R::store($bean);
+    return $bean;
+}
+
+
+/**
  * Creates a new group
  * 
  * For our tests, the group will have only one attribute - name
@@ -43,14 +75,61 @@ function createGroup($name, RedBean_OODBBean $parentGroup = null) {
  * @param type $group
  * @return type
  */
-function createUser($name, $group = null) {
+function createUser($name, $group = null, $role = null) {
     $bean = R::dispense('user');
     $bean->setAttr('name', $name);
     if (null !== $group) {
         $bean->setAttr('group', $group);
     }
+    
+    if (null !== $role) {
+        $bean->setAttr('role', $role);
+    }
+    
     R::store($bean);
     return $bean;
+}
+
+/**
+ * Creates some dummy permissions for testing purposes
+ */
+function initPermissions() {
+    createPermission('VIEW_SUBUSERS');
+    createPermission('EDIT_SUBUSERS');
+    createPermission('VIEW_OWN_GROUP_USERS');
+    createPermission('EDIT_OWN_GROUP_USERS');
+    createPermission('VIEW_SUBGROUPS');
+    createPermission('EDIT_SUBGROUPS');
+    createPermission('EDIT_OWN_GROUP');
+}
+
+/**
+ * Creates some dummy roles for testing purposes
+ */
+function initRoles() {
+    $viewSubusers = R::load('permission', 1);
+    $editSubusers = R::load('permission', 2);
+    $viewOwnGroupUsers = R::load('permission', 3);
+    $editOwnGroupUsers = R::load('permission', 4);
+    $viewSubgroups = R::load('permission', 5);
+    $editSubgroups = R::load('permission', 6);
+    $editOwnGroup = R::load('permission', 7);
+    
+    
+    // ADMIN CAN ACCESS AND MODIFY DATA CORRESPONDING TO HIS VISIBILITY LEVEL
+    $adminRole = createRole('ADMIN', array($viewSubusers, $editSubusers
+                                          , $viewOwnGroupUsers, $editOwnGroupUsers
+                                          , $viewSubgroups, $editSubgroups
+                                          , $editOwnGroup
+                                          )
+                            );
+    
+    // NORMAL USER CAN SEE EVERYTHING FROM HIS LEVEL DOWN, BUT CANNOT EDIT
+    $normalUser = createRole('USER', array($viewSubusers, $viewSubgroups));
+    
+    // UNTRUSTED USER DOES NOT HAVE ANY PRIVILEGES !!!
+    $restrictedUser = createRole('UNTRUSTED_USER', array());
+    
 }
 
 /**
@@ -87,11 +166,13 @@ function initUsers() {
     
     foreach ($groups as $group) {
         for ($i = 0; $i < 3; $i++) {
-            createUser(str_replace(' ', '_', $group->name) . '_User_' . $i, $group);
+            createUser(str_replace(' ', '_', $group->name) . '_User_' . $i, $group, R::load('role', $i + 1));
         }
     }
 }
 
 R::nuke(); // RESET DATABASE
+initPermissions(); // Create dummy permissions
+initRoles(); // Create dummy roles
 initGroups(); // Create dummy groups
 initUsers(); // Create dummy users

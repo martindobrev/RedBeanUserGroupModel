@@ -66,10 +66,42 @@ class Model_User extends \RedBean_SimpleModel {
     public function getVisibleUsers() {
         if ($this->bean->group) {
             $groupModel = $this->bean->group->box();
+            $groupModel->setActivePermissions($this->exportPermissions());
             $groupModel->setUserPredicates($this->_userPredicates);
             return $groupModel->getAllUsers();
         } else {
             return array();
         }
+    }
+    
+    /**
+     * Gets the user role
+     * @return RedBean_OODBBean
+     */
+    public function getRole() {
+        return $this->bean->role;
+    }
+    
+    /**
+     * Gets the user permissions
+     * 
+     * @return array of RedBean_OODBBean objects
+     */
+    public function getPermissions() {
+        return $this->getRole()->sharedPermission;
+    }
+    
+    /**
+     * Exports the users permissions as simple array
+     * 
+     * @return type
+     */
+    public function exportPermissions() {
+        $permissionBeans = $this->getRole()->sharedPermission;
+        $output = array();
+        foreach ($permissionBeans as $bean) {
+            $output[] = $bean->name;
+        }
+        return $output;
     }
 }

@@ -33,22 +33,36 @@ include_once 'init_db.php';
 $user = R::load('user', 5);
 $userBox = $user->box();
 
+
+$permissions = $userBox->getPermissions();
+echo '<h2>User "' . $user->name . '" permissions:</h2>';
+foreach ($permissions as $p) {
+    echo '<pre>';
+    print_r($p->export());
+    echo '</pre>';
+}
+
+
+
 $predicate = new UserNameRegexPredicate('/^[a-zA-Z_]*2$/');
 $predicate2 = new UserNameRegexPredicate('/Dresden/');
 
-$userBox->addUserPredicate($predicate);
-$userBox->addUserPredicate($predicate2);
+//$userBox->addUserPredicate($predicate);
+//$userBox->addUserPredicate($predicate2);
 $visibleUsers = $userBox->getVisibleUsers();
 
-echo '<h2>Visible users for user "' . $user->name . '": </h2>';
+
+echo '<hr/>';
+echo '<h2>Visible users:</h2>';
 echo '<pre>';
 foreach ($visibleUsers as $u) {
-    print_r($u->export());
+    
+    print_r(array('id' => $u->id, 'name' => $u->name));
 }
-
 echo '</pre>';
-die();
 
+
+die('--------------  THE END --------------');
 
 
 /*   FILTERED USERS TEST 

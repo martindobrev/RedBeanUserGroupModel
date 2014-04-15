@@ -24,6 +24,10 @@ class Model_Group extends \RedBean_SimpleModel {
      */
     private $_userPredicates = array();
     
+    private $_activePermissions = array();
+    
+    private $_filterPermissions = false;
+    
     /**
      * Adds a new user predicate for user filtering
      * 
@@ -47,6 +51,38 @@ class Model_Group extends \RedBean_SimpleModel {
     public function setUserPredicates($userPredicates) {
         $this->_userPredicates = $userPredicates;
     }
+    
+    
+    public function getActivePermissions() {
+        return $this->_activePermissions;
+    }
+    
+    public function setActivePermissions($permissions) {
+        $this->_activePermissions = $permissions;
+        $this->_filterPermissions = true;
+    }
+    
+    public function addPermissionToFilter($permission) {
+        $this->_activePermissions[] = $permission;
+        $this->_filterPermissions = true;
+    }
+    
+    public function isPermissionFilterSet() {
+        return $this->_filterPermissions;
+    }
+    
+    public function resetPermissionFilter() {
+        $this->_activePermissions = array();
+        $this->_filterPermissions = false;
+    }
+    
+    public function hasPermission($permission) {
+        if (false === $this->isPermissionFilterSet()) return false;
+        return in_array($permission, $this->_activePermissions);
+    }
+            
+    
+    
     
     /**
      * Check if we are not creating an infinite loop 
@@ -72,6 +108,11 @@ class Model_Group extends \RedBean_SimpleModel {
      * @return array of RedBean_OODBBean objects
      */
     public function getOwnChildren() {
+        if (true === $this->isPermissionFilterSet()) {
+            if (false === $this->hasPermission('VIEW_SUBGROUPS')) {
+                return array();
+            }
+        }
         return $this->bean->alias('parent')->ownGroup;
     }
     
@@ -174,6 +215,12 @@ class Model_Group extends \RedBean_SimpleModel {
      * @return array of RedBean_OODBBean objects
      */
     public function getOwnUsers() {
+        if (true === $this->isPermissionFilterSet()) {
+            if (false === $this->hasPermission('VIEW_OWN_GROUP_USERS')) {
+                return array();
+            }
+        }
+        
         if (0 < count($this->_userPredicates)) {
             $users = $this->bean->ownUser;
             $filteredUsers = array();
